@@ -214,44 +214,120 @@
       function List(props) {
         return (
           <ul>
-            <li>LIST</li>
+            {props.items.map((item) => (
+              <li key={item.id}>
+                <span
+                  onClick={() => props.toggle && props.toggle(item.id)}
+                  style={{
+                    textDecoration: item.complete ? "line-through" : "none",
+                  }}
+                >
+                  {item.name}
+                </span>
+                <button onClick={() => props.remove(item)}>X</button>
+              </li>
+            ))}
           </ul>
         );
       }
 
       class Todos extends React.Component {
+        addItem = (event) => {
+          event.preventDefault();
+          const name = this.input.value; // the input is a reference to the dom element
+          this.input.value = "";
+          this.props.store.dispatch(
+            addTodoAction({
+              name,
+              complete: false,
+              id: generateId(),
+            })
+          );
+        };
+        removeItem = (todo) => {
+          // props are passed by ref so it will be changed in parent
+          // atomatic rerendering is only for state that's why forceUpdate()
+          // was passed to store.subscribe, see App component.
+          this.props.store.dispatch(removeTodoAction(todo.id));
+        };
+        toggleItem = (id) => {
+          this.props.store.dispatch(toggleTodoAction(id));
+        };
         render() {
           return (
             <div>
-              Todos
-              <List />
+              <h1>Todos</h1>
+              <input
+                type="text"
+                placeholder="Add Todo"
+                ref={(inputElement) => (this.input = inputElement)}
+              />
+              <button onClick={this.addItem}>Add Todo</button>
+              <List
+                items={this.props.todos}
+                remove={this.removeItem}
+                toggle={this.toggleItem}
+              />
             </div>
           );
         }
       }
 
       class Goals extends React.Component {
+        addItem = (event) => {
+          event.preventDefault();
+          const name = this.input.value; // the input is a reference to the dom element
+          this.input.value = "";
+          this.props.store.dispatch(
+            addGoalAction({
+              name,
+              id: generateId(),
+            })
+          );
+        };
+        removeItem = (goal) => {
+          // props are passed by ref so it will be changed in parent
+          // atomatic rerendering is only for state that's why forceUpdate()
+          // was passed to store.subscribe, see App component.
+          this.props.store.dispatch(removeGoalAction(goal.id));
+        };
         render() {
           return (
             <div>
-              Goals
-              <List />
+              <h1>Goals</h1>
+              <input
+                type="text"
+                placeholder="Add Goal"
+                ref={(inputElement) => (this.input = inputElement)}
+              />
+              <button onClick={this.addItem}>Add Goal</button>
+              <List items={this.props.goals} remove={this.removeItem} />
             </div>
           );
         }
       }
 
       class App extends React.Component {
+        componentDidMount() {
+          const { store } = this.props;
+          // this will force the app to update on every state change (subscription)
+          // which will make inner components (i.e. Todos and Goals) to rerender
+          // Note: forceUpdate is an anti-pattern (i.e not suggested to be used.)
+          store.subscribe(() => this.forceUpdate());
+        }
+
         render() {
+          const { store } = this.props;
+          const { todos, goals } = store.getState();
           return (
             <div>
-              <Todos />
-              <Goals />
+              <Todos todos={todos} store={this.props.store} />
+              <Goals goals={goals} store={this.props.store} />
             </div>
           );
         }
       }
-      ReactDOM.render(<App />, document.getElementById("app"));
+      ReactDOM.render(<App store={store} />, document.getElementById("app"));
     </script>
   </body>
 </html>
