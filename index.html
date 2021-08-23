@@ -73,6 +73,16 @@
         };
       }
 
+      function handelDeleteTodo(todo) {
+        return (dispatch) => {
+          dispatch(removeTodoAction(todo.id));
+          return API.deleteTodo(todo.id).catch(() => {
+            dispatch(addTodoAction(todo));
+            alert("Error Occured, Can't remove Todo ( " + todo.name + " ) !");
+          });
+        };
+      }
+
       function todos(state = [], action) {
         switch (action.type) {
           case ADD_TODO:
@@ -142,6 +152,13 @@
         return result;
       };
 
+      const thunk = (store) => (next) => (action) => {
+        if (typeof action === "function") {
+          return action(store.dispatch);
+        }
+        return next(action);
+      };
+
       // function app(state = {}, action) {
       //   return {
       //     todos: todos(state.todos, action),
@@ -151,7 +168,7 @@
 
       const store = Redux.createStore(
         Redux.combineReducers({ todos, goals, loading }),
-        Redux.applyMiddleware(checker, logger)
+        Redux.applyMiddleware(thunk, checker, logger)
       );
     </script>
     <script type="text/babel">
@@ -191,11 +208,7 @@
           // props are passed by ref so it will be changed in parent
           // atomatic rerendering is only for state that's why forceUpdate()
           // was passed to store.subscribe, see App component.
-          this.props.store.dispatch(removeTodoAction(todo.id));
-          return API.deleteTodo(todo.id).catch(() => {
-            this.props.store.dispatch(addTodoAction(todo));
-            alert("Error Occured, Can't remove Todo ( " + todo.name + " ) !");
-          });
+          this.props.store.dispatch(handelDeleteTodo(todo));
         };
         toggleItem = (id) => {
           this.props.store.dispatch(toggleTodoAction(id));
