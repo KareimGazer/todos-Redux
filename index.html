@@ -105,6 +105,15 @@
         }
       }
 
+      function loading(state = true, action) {
+        switch (action.type) {
+          case RECEIVE_DATA:
+            return false;
+          default:
+            return state;
+        }
+      }
+
       const checker = (store) => (next) => (action) => {
         {
           if (
@@ -141,7 +150,7 @@
       // }
 
       const store = Redux.createStore(
-        Redux.combineReducers({ todos, goals }),
+        Redux.combineReducers({ todos, goals, loading }),
         Redux.applyMiddleware(checker, logger)
       );
     </script>
@@ -184,6 +193,10 @@
           // atomatic rerendering is only for state that's why forceUpdate()
           // was passed to store.subscribe, see App component.
           this.props.store.dispatch(removeTodoAction(todo.id));
+          return API.deleteTodo(todo.id).catch(() => {
+            this.props.store.dispatch(addTodoAction(todo));
+            alert("Error Occured, Can't remove Todo ( " + todo.name + " ) !");
+          });
         };
         toggleItem = (id) => {
           this.props.store.dispatch(toggleTodoAction(id));
@@ -225,6 +238,10 @@
           // atomatic rerendering is only for state that's why forceUpdate()
           // was passed to store.subscribe, see App component.
           this.props.store.dispatch(removeGoalAction(goal.id));
+          return API.deleteGoal(goal.id).catch(() => {
+            this.props.store.dispatch(addGoalAction(goal));
+            alert("Error Occured, Can't remove Goal ( " + goal.name + " ) !");
+          });
         };
         render() {
           return (
@@ -260,7 +277,12 @@
 
         render() {
           const { store } = this.props;
-          const { todos, goals } = store.getState();
+          const { todos, goals, loading } = store.getState();
+
+          if (loading === true) {
+            return <h3>Loading</h3>;
+          }
+
           return (
             <div>
               <Todos todos={todos} store={this.props.store} />
