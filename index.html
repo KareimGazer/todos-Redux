@@ -74,6 +74,30 @@
         };
       }
 
+      function handleAddTodo(name, cb) {
+        return (dispatch) => {
+          return API.saveTodo(name)
+            .then((todo) => {
+              dispatch(addTodoAction(todo));
+              cb();
+            })
+            .catch(() => {
+              alert("There was an error. Try again.");
+            });
+        };
+      }
+
+      function handleToggle(id) {
+        return (dispatch) => {
+          dispatch(toggleTodoAction(id));
+
+          return API.saveTodoToggle(id).catch(() => {
+            dispatch(toggleTodoAction(id));
+            alert("An error occurred. Try again.");
+          });
+        };
+      }
+
       function handelDeleteTodo(todo) {
         return (dispatch) => {
           dispatch(removeTodoAction(todo.id));
@@ -219,15 +243,9 @@
 
       class Todos extends React.Component {
         addItem = (event) => {
-          event.preventDefault();
-          return API.saveTodo(this.input.value)
-            .then((todo) => {
-              this.props.store.dispatch(addTodoAction(todo));
-              this.input.value = "";
-            })
-            .catch(() => {
-              alert("There was an error. Try again.");
-            });
+          this.props.store.dispatch(
+            handleAddTodo(this.input.value, () => (this.input.value = ""))
+          );
         };
         removeItem = (todo) => {
           // props are passed by ref so it will be changed in parent
@@ -236,11 +254,7 @@
           this.props.store.dispatch(handelDeleteTodo(todo));
         };
         toggleItem = (id) => {
-          this.props.store.dispatch(toggleTodoAction(id));
-          return API.saveTodoToggle(id).catch(() => {
-            this.props.store.dispatch(toggleTodoAction(id));
-            alert("Error Occured, Can't toggle Todo !");
-          });
+          this.props.store.dispatch(handleToggle(id));
         };
         render() {
           return (
@@ -273,7 +287,6 @@
           // props are passed by ref so it will be changed in parent
           // atomatic rerendering is only for state that's why forceUpdate()
           // was passed to store.subscribe, see App component.
-          this.props.store.dispatch(removeGoalAction(goal.id));
           this.props.store.dispatch(handleDeleteGoal(goal));
         };
         render() {
