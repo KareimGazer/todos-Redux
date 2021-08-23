@@ -178,15 +178,14 @@
       class Todos extends React.Component {
         addItem = (event) => {
           event.preventDefault();
-          const name = this.input.value; // the input is a reference to the dom element
-          this.input.value = "";
-          this.props.store.dispatch(
-            addTodoAction({
-              name,
-              complete: false,
-              id: generateId(),
+          return API.saveTodo(this.input.value)
+            .then((todo) => {
+              this.props.store.dispatch(addTodoAction(todo));
+              this.input.value = "";
             })
-          );
+            .catch(() => {
+              alert("There was an error. Try again.");
+            });
         };
         removeItem = (todo) => {
           // props are passed by ref so it will be changed in parent
@@ -228,14 +227,12 @@
       class Goals extends React.Component {
         addItem = (event) => {
           event.preventDefault();
-          const name = this.input.value; // the input is a reference to the dom element
-          this.input.value = "";
-          this.props.store.dispatch(
-            addGoalAction({
-              name,
-              id: generateId(),
+          return API.saveGoal(this.input.value)
+            .then((goal) => {
+              this.props.store.dispatch(addGoalAction(goal));
+              this.input.value = "";
             })
-          );
+            .catch(() => alert("There was an error. Try again."));
         };
         removeItem = (goal) => {
           // props are passed by ref so it will be changed in parent
